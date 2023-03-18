@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import Mic from "../icons/Mic";
 import Stop from "../icons/Stop";
@@ -5,12 +6,11 @@ import Spinner from "./Spinner";
 
 const mimeType = "audio/webm";
 
-const VoiceRecorder = ({ onClick }) => {
+const VoiceRecorder = () => {
   const mediaRecorder = useRef(null);
-  const [permission, setPermission] = useState(false);
   const [recordingStatus, setRecordingStatus] = useState("inactive");
   const [stream, setStream] = useState(null);
-  const [audio, setAudio] = useState(null);
+  const [audioData, setAudioData] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
 
   const getMicrophonePermission = async () => {
@@ -20,7 +20,6 @@ const VoiceRecorder = ({ onClick }) => {
           audio: true,
           video: false,
         });
-        setPermission(true);
         setStream(mediaStream);
       } catch (err) {
         alert(err.message);
@@ -34,23 +33,14 @@ const VoiceRecorder = ({ onClick }) => {
     getMicrophonePermission();
   }, []);
 
-  const uploadAudio = async () => {
-    setRecordingStatus("uploading");
-    setTimeout(() => {
-      setRecordingStatus("inactive");
-    }, 2000);
-  };
-
   const startRecording = async () => {
     setRecordingStatus("recording");
+
     const media = new MediaRecorder(stream, { type: mimeType });
-
     mediaRecorder.current = media;
-
     mediaRecorder.current.start();
 
     let localAudioChunks = [];
-
     mediaRecorder.current.ondataavailable = (event) => {
       if (typeof event.data === "undefined") return;
       if (event.data.size === 0) return;
@@ -64,12 +54,29 @@ const VoiceRecorder = ({ onClick }) => {
     setRecordingStatus("inactive");
     mediaRecorder.current.stop();
 
-    mediaRecorder.current.onstop = () => {
+    mediaRecorder.current.onstop = async () => {
       const audioBlob = new Blob(audioChunks, { type: mimeType });
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      setAudio(audioUrl);
-      uploadAudio();
+      setRecordingStatus("uploading");
+
+      let data = new FormData();
+      data.append("file", audioBlob, "test.ogg");
+      console.log(data);
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+
+      try {
+        const res = await axios.post("/speech_to_text", data, config);
+        console.log(res);
+      } catch (error) {
+        console.log(error);
+      }
+
+      setRecordingStatus("inactive");
       setAudioChunks([]);
     };
   };
