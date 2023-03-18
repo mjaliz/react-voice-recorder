@@ -3,16 +3,6 @@ import Header from "../components/Header";
 import VoiceRecorder from "../components/VoiceRecorder";
 
 const Speaking = () => {
-  const [state, setState] = useState("stopped");
-  const handleRecord = (status) => {
-    console.log(status);
-    switch (state) {
-      case "recording":
-        return "stop";
-      case "stopped":
-        return "record";
-    }
-  };
   return (
     <div className="flex flex-col h-screen">
       <Header />

@@ -1,71 +1,108 @@
 import React, { useEffect, useRef, useState } from "react";
 import Mic from "../icons/Mic";
+import Stop from "../icons/Stop";
+import Spinner from "./Spinner";
+
+const mimeType = "audio/webm";
 
 const VoiceRecorder = ({ onClick }) => {
-  const [data, SetData] = useState(null);
-  const [name, setName] = useState("");
-  const [users, setUsers] = useState([]);
-  const [transcriptions, setTranscriptions] = useState([]);
-  const [audioURL, setAudioURL] = useState(null);
-  const [phraseId, setPhraseId] = useState(0);
-  const [recorded, setRecorded] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState([]);
-  const [chunks, setChunks] = useState([]);
-  const recordBtnRef = useRef(null);
+  const mediaRecorder = useRef(null);
+  const [permission, setPermission] = useState(false);
+  const [recordingStatus, setRecordingStatus] = useState("inactive");
+  const [stream, setStream] = useState(null);
+  const [audio, setAudio] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
+
+  const getMicrophonePermission = async () => {
+    if ("MediaRecorder" in window) {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: false,
+        });
+        setPermission(true);
+        setStream(mediaStream);
+      } catch (err) {
+        alert(err.message);
+      }
+    } else {
+      alert("The MediaRecorder API is not supported in your browser.");
+    }
+  };
 
   useEffect(() => {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: true,
-        })
-        .then((stream) => {
-          setMediaRecorder(new MediaRecorder(stream));
-
-          mediaRecorder.ondataavailable = (e) => {
-            setChunks((chunks) => [...chunks, e.data]);
-          };
-
-          mediaRecorder.onstop = () => {
-            const blob = new Blob(chunks, { type: "audio/wav; codecs=opus" });
-            const audioURL = window.URL.createObjectURL(blob);
-            setAudioURL(audioURL);
-            console.log(chunks);
-            chunks = [];
-
-            let data = new FormData();
-            data.append("file", blob, "test.wav");
-            SetData(data);
-            setRecorded(true);
-          };
-        })
-        .catch((err) => {
-          console.error(`The following getUserMedia error occurred: ${err}`);
-        });
-    } else {
-      console.log("getUserMedia not supported on your browser!");
-    }
+    getMicrophonePermission();
   }, []);
 
+  const uploadAudio = async () => {
+    setRecordingStatus("uploading");
+    setTimeout(() => {
+      setRecordingStatus("inactive");
+    }, 2000);
+  };
+
+  const startRecording = async () => {
+    setRecordingStatus("recording");
+    const media = new MediaRecorder(stream, { type: mimeType });
+
+    mediaRecorder.current = media;
+
+    mediaRecorder.current.start();
+
+    let localAudioChunks = [];
+
+    mediaRecorder.current.ondataavailable = (event) => {
+      if (typeof event.data === "undefined") return;
+      if (event.data.size === 0) return;
+      localAudioChunks.push(event.data);
+    };
+
+    setAudioChunks(localAudioChunks);
+  };
+
+  const stopRecording = () => {
+    setRecordingStatus("inactive");
+    mediaRecorder.current.stop();
+
+    mediaRecorder.current.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: mimeType });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      setAudio(audioUrl);
+      uploadAudio();
+      setAudioChunks([]);
+    };
+  };
+
   const handleClick = () => {
-    switch (mediaRecorder.state) {
-      case "recording":
-        mediaRecorder.stop();
-        break;
+    switch (recordingStatus) {
       case "inactive":
-        mediaRecorder.start();
+        startRecording();
+        break;
+      case "recording":
+        stopRecording();
         break;
     }
-
-    console.log(mediaRecorder.state);
+  };
+  const renderRecordBtn = () => {
+    switch (recordingStatus) {
+      case "inactive":
+        return <Mic />;
+      case "recording":
+        return <Stop />;
+      case "uploading":
+        return <Spinner />;
+    }
   };
   return (
     <button
-      className="flex justify-center items-center bg-blue-100 w-14 h-14 rounded-full text-blue-600"
+      className={`flex justify-center items-center  w-14 h-14 rounded-full 
+      ${recordingStatus === "inactive" && "bg-blue-100 text-blue-600"} 
+      ${recordingStatus === "recording" && "bg-green-100 text-green-600"}
+      ${recordingStatus === "uploading" && "bg-yellow-100"}`}
       onClick={handleClick}
-      ref={recordBtnRef}
     >
-      <Mic />
+      {renderRecordBtn()}
     </button>
   );
 };
