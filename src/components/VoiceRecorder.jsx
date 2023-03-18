@@ -1,16 +1,14 @@
-import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
+
 import Mic from "../icons/Mic";
 import Stop from "../icons/Stop";
 import Spinner from "./Spinner";
-
-const mimeType = "audio/webm";
 
 const VoiceRecorder = () => {
   const mediaRecorder = useRef(null);
   const [recordingStatus, setRecordingStatus] = useState("inactive");
   const [stream, setStream] = useState(null);
-  const [audioData, setAudioData] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
 
   const getMicrophonePermission = async () => {
@@ -36,7 +34,7 @@ const VoiceRecorder = () => {
   const startRecording = async () => {
     setRecordingStatus("recording");
 
-    const media = new MediaRecorder(stream, { type: mimeType });
+    const media = new MediaRecorder(stream, { type: "audio/webm" });
     mediaRecorder.current = media;
     mediaRecorder.current.start();
 
