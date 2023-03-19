@@ -7,7 +7,7 @@ import Spinner from "./Spinner";
 
 const mimeType = "audio/opus";
 const accessToken =
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1aWQiOjE2MDMyOSwic2lkIjoxNjM0MTYsInVyIjpbMV0sInJhIjoiMjAyMy0wMy0xOCAxNDo1NDo0MCIsInN1IjpudWxsLCJjaSI6Ikp1SmRBelNSIiwiY3YiOjM4LCJleHAiOjE2NzkxNDIyODB9.wUrlkC8Cj6f5xriPlTR3XAcSAV7bLBkLYriSSSvgSgqHDPkE9tVu7NH0POnD995pOh6Cb8P5ggRDrbINp6H2ZA";
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1aWQiOjE2MDMzMSwic2lkIjoxNjM0MTksInVyIjpbMV0sInJhIjoiMjAyMy0wMy0xOSAxMDowNDo1OSIsInN1IjpudWxsLCJjaSI6Ikp1SmRBelNSIiwiY3YiOjM4LCJleHAiOjE2NzkyMTEyOTl9.8xAFR2Bzgrx8J6pjliyXTnV4ajJBnztiasHmcCq3IN0X5q-xHRaSHs4ZbbFQJ6gP4NnhRh3m8i89T7Y6e_MX1w";
 
 const VoiceRecorder = ({ onSuccess, text }) => {
   const mediaRecorder = useRef(null);
@@ -64,7 +64,15 @@ const VoiceRecorder = ({ onSuccess, text }) => {
 
       let data = new FormData();
       data.append("file", audioBlob, "test.ogg");
-      data.append("true_text", text);
+      data.append(
+        "text",
+        JSON.stringify({
+          text,
+          type: 3,
+          blank_values: ["Nice"],
+          choices: ["Nice to meet you", "I want to meet her"],
+        })
+      );
       const config = {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -79,7 +87,7 @@ const VoiceRecorder = ({ onSuccess, text }) => {
           config
         );
         console.log(res.data.data);
-        onSuccess(res.data.data.result.matching.html);
+        onSuccess(res.data.data.result.matching);
       } catch (error) {
         console.log(error);
       }
