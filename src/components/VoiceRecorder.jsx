@@ -7,7 +7,7 @@ import Spinner from "./Spinner";
 
 const mimeType = "audio/opus";
 const accessToken =
-  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1aWQiOjE2MDMzMSwic2lkIjoxNjM0MTksInVyIjpbMV0sInJhIjoiMjAyMy0wMy0xOSAxMDowNDo1OSIsInN1IjpudWxsLCJjaSI6Ikp1SmRBelNSIiwiY3YiOjM4LCJleHAiOjE2NzkyMTEyOTl9.8xAFR2Bzgrx8J6pjliyXTnV4ajJBnztiasHmcCq3IN0X5q-xHRaSHs4ZbbFQJ6gP4NnhRh3m8i89T7Y6e_MX1w";
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJ1aWQiOjE2MDMzNCwic2lkIjoxNjM0MjIsInVyIjpbMV0sInJhIjoiMjAyMy0wMy0xOSAxNDo1MjoyNyIsInN1IjpudWxsLCJjaSI6Ikp1SmRBelNSIiwiY3YiOjM4LCJleHAiOjE2NzkyMjg1NDd9.7eWNRryduUjsnisY8M0y1vJgzRETtHVKUKBzEkWxjS932-6Kc_3z8PsY5gQZKwHQZRTqwlkFXUKy7VRUPQyVAQ";
 
 const VoiceRecorder = ({ onSuccess, text }) => {
   const mediaRecorder = useRef(null);
@@ -67,10 +67,10 @@ const VoiceRecorder = ({ onSuccess, text }) => {
       data.append(
         "text",
         JSON.stringify({
-          text,
+          text: text.phrase,
           type: 3,
-          blank_values: ["Nice"],
-          choices: ["Nice to meet you", "I want to meet her"],
+          blank_values: text.blanks,
+          choices: [text.choiceOne, text.choiceTwo],
         })
       );
       const config = {
